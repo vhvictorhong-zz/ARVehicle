@@ -48,9 +48,14 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let orientation = SCNVector3(-transform.m31, -transform.m32, -transform.m33)
         let location = SCNVector3(transform.m41, transform.m42, transform.m43)
         let currentPositionOfCamera = orientation + location
+        
         let boxNode = SCNNode(geometry: SCNBox(width: 0.1, height: 0.1, length: 0.1, chamferRadius: 0))
         boxNode.geometry?.firstMaterial?.diffuse.contents = UIColor.blue
         boxNode.position = currentPositionOfCamera
+        
+        let body = SCNPhysicsBody(type: .dynamic, shape: SCNPhysicsShape(node: boxNode, options: [SCNPhysicsShape.Option.keepAsCompound: true]))
+        boxNode.physicsBody = body
+
         self.sceneView.scene.rootNode.addChildNode(boxNode)
         
     }
