@@ -60,10 +60,10 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         let scene = SCNScene(named: "Car-Scene.scn")
         let chassis = (scene?.rootNode.childNode(withName: "chassis", recursively: false))!
-        let rearRightWheelNode = chassis.childNode(withName: "rearRight", recursively: false)!
-        let rearLeftWheelNode = chassis.childNode(withName: "rearLeft", recursively: false)!
-        let frontRightWheelNode = chassis.childNode(withName: "frontRight", recursively: false)!
-        let frontLeftWheelNode = chassis.childNode(withName: "frontLeft", recursively: false)!
+        let rearRightWheelNode = chassis.childNode(withName: "rearRightParent", recursively: false)!
+        let rearLeftWheelNode = chassis.childNode(withName: "rearLeftParent", recursively: false)!
+        let frontRightWheelNode = chassis.childNode(withName: "frontRightParent", recursively: false)!
+        let frontLeftWheelNode = chassis.childNode(withName: "frontLeftParent", recursively: false)!
         
         let v_rearRightWheel = SCNPhysicsVehicleWheel(node: rearRightWheelNode)
         let v_rearLeftWheel = SCNPhysicsVehicleWheel(node: rearLeftWheelNode)
@@ -75,7 +75,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let body = SCNPhysicsBody(type: .dynamic, shape: SCNPhysicsShape(node: chassis, options: [SCNPhysicsShape.Option.keepAsCompound: true]))
         chassis.physicsBody = body
         
-        self.vehicle = SCNPhysicsVehicle(chassisBody: frameNode.physicsBody!, wheels: [v_rearRightWheel, v_rearLeftWheel, v_frontRightWheel, v_frontLeftWheel])
+        self.vehicle = SCNPhysicsVehicle(chassisBody: chassis.physicsBody!, wheels: [v_rearRightWheel, v_rearLeftWheel, v_frontRightWheel, v_frontLeftWheel])
         self.sceneView.scene.physicsWorld.addBehavior(self.vehicle)
         self.sceneView.scene.rootNode.addChildNode(chassis)
         
