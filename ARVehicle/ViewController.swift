@@ -20,6 +20,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     var vehicle = SCNPhysicsVehicle()
     var orientation: CGFloat = 0
     var touched: Bool = false
+    var accelerationValues = [UIAccelerationValue(0), UIAccelerationValue(0)]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -104,12 +105,20 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     func accelerometerDidChange(acceleration: CMAcceleration) {
         
-        if acceleration.x > 0 {
-            self.orientation = -CGFloat(acceleration.y)
+        accelerationValues[1] = filtered(currentAcceleration: accelerationValues[1], updatedAcceleration: acceleration.y)
+        accelerationValues[0] = filtered(currentAcceleration: accelerationValues[0], updatedAcceleration: acceleration.x)
+        if accelerationValues[0] > 0 {
+            self.orientation = -CGFloat(accelerationValues[1])
         } else {
-            self.orientation = CGFloat(acceleration.y)
+            self.orientation = CGFloat(accelerationValues[1])
         }
         
+    }
+    
+    func filtered(currentAcceleration: Double, updatedAcceleration: Double) -> Double {
+        
+        let kfilteringFactor = 0.5
+        return updatedAcceleration * kfilteringFactor + currentAcceleration * (1 - kfilteringFactor)
     }
     
     //MARK: overide touch
