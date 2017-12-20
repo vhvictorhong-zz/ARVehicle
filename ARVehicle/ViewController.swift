@@ -18,6 +18,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     let motionManager = CMMotionManager()
     
     var vehicle = SCNPhysicsVehicle()
+    var orientation: CGFloat = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,6 +28,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         self.sceneView.session.run(configuration)
         self.sceneView.delegate = self
         self.setUpAccelerometer()
+        self.sceneView.showsStatistics = true
         
     }
 
@@ -100,9 +102,12 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     func accelerometerDidChange(acceleration: CMAcceleration) {
         
-        print(acceleration.x)
-        print(acceleration.y)
-        print("")
+        if acceleration.x > 0 {
+            self.orientation = -CGFloat(acceleration.y)
+        } else {
+            self.orientation = CGFloat(acceleration.y)
+
+        }
         
     }
     
@@ -133,6 +138,13 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         node.enumerateChildNodes { (childNode, _) in
             childNode.removeFromParentNode()
         }
+        
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didSimulatePhysicsAtTime time: TimeInterval) {
+        
+        self.vehicle.setSteeringAngle(orientation, forWheelAt: 2)
+        self.vehicle.setSteeringAngle(orientation, forWheelAt: 3)
         
     }
     
