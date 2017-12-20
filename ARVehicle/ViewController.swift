@@ -76,6 +76,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         chassis.position = currentPositionOfCamera
         
         let body = SCNPhysicsBody(type: .dynamic, shape: SCNPhysicsShape(node: chassis, options: [SCNPhysicsShape.Option.keepAsCompound: true]))
+        body.mass = 1
         chassis.physicsBody = body
         
         self.vehicle = SCNPhysicsVehicle(chassisBody: chassis.physicsBody!, wheels: [v_rearRightWheel, v_rearLeftWheel, v_frontRightWheel, v_frontLeftWheel])
@@ -158,10 +159,10 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     func renderer(_ renderer: SCNSceneRenderer, didSimulatePhysicsAtTime time: TimeInterval) {
         
         var engineForce: CGFloat = 0
-        self.vehicle.setSteeringAngle(orientation, forWheelAt: 2)
-        self.vehicle.setSteeringAngle(orientation, forWheelAt: 3)
+        self.vehicle.setSteeringAngle(-orientation, forWheelAt: 2)
+        self.vehicle.setSteeringAngle(-orientation, forWheelAt: 3)
         if self.touched {
-            engineForce = 50
+            engineForce = 5
         } else {
             engineForce = 0
         }
