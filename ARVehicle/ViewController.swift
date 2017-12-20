@@ -19,7 +19,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     var vehicle = SCNPhysicsVehicle()
     var orientation: CGFloat = 0
-    var touched: Bool = false
+    var touched: Int = 0
     var accelerationValues = [UIAccelerationValue(0), UIAccelerationValue(0)]
     
     override func viewDidLoad() {
@@ -125,13 +125,14 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         
-        self.touched = true
+        guard let _ = touches.first else { return }
+        self.touched += touches.count
         
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         
-        self.touched = false
+        self.touched = 0
         
     }
     
@@ -168,15 +169,22 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     func renderer(_ renderer: SCNSceneRenderer, didSimulatePhysicsAtTime time: TimeInterval) {
         
         var engineForce: CGFloat = 0
+        var brakingForce: CGFloat = 0
         self.vehicle.setSteeringAngle(-orientation, forWheelAt: 2)
         self.vehicle.setSteeringAngle(-orientation, forWheelAt: 3)
-        if self.touched {
+        if self.touched == 1 {
             engineForce = 5
+        } else if self.touched == 2 {
+            engineForce = -5
+        } else if self.touched == 3{
+            brakingForce = 100
         } else {
             engineForce = 0
         }
         self.vehicle.applyEngineForce(engineForce, forWheelAt: 0)
         self.vehicle.applyEngineForce(engineForce, forWheelAt: 1)
+        self.vehicle.applyBrakingForce(brakingForce, forWheelAt: 0)
+        self.vehicle.applyBrakingForce(brakingForce, forWheelAt: 1)
         
     }
     
