@@ -19,6 +19,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     var vehicle = SCNPhysicsVehicle()
     var orientation: CGFloat = 0
+    var touched: Bool = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -106,8 +107,21 @@ class ViewController: UIViewController, ARSCNViewDelegate {
             self.orientation = -CGFloat(acceleration.y)
         } else {
             self.orientation = CGFloat(acceleration.y)
-
         }
+        
+    }
+    
+    //MARK: overide touch
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
+        self.touched = true
+        
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
+        self.touched = false
         
     }
     
@@ -143,8 +157,16 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     func renderer(_ renderer: SCNSceneRenderer, didSimulatePhysicsAtTime time: TimeInterval) {
         
+        var engineForce: CGFloat = 0
         self.vehicle.setSteeringAngle(orientation, forWheelAt: 2)
         self.vehicle.setSteeringAngle(orientation, forWheelAt: 3)
+        if self.touched {
+            engineForce = 50
+        } else {
+            engineForce = 0
+        }
+        self.vehicle.applyEngineForce(engineForce, forWheelAt: 0)
+        self.vehicle.applyEngineForce(engineForce, forWheelAt: 1)
         
     }
     
