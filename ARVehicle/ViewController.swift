@@ -8,11 +8,16 @@
 
 import UIKit
 import ARKit
+import CoreMotion
 
 class ViewController: UIViewController, ARSCNViewDelegate {
 
     @IBOutlet weak var sceneView: ARSCNView!
+    
     let configuration = ARWorldTrackingConfiguration()
+    let motionManager = CMMotionManager()
+    
+    var vehicle = SCNPhysicsVehicle()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,6 +26,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         self.configuration.planeDetection = .horizontal
         self.sceneView.session.run(configuration)
         self.sceneView.delegate = self
+        self.setUpAccelerometer()
         
     }
 
@@ -29,15 +35,18 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Dispose of any resources that can be recreated.
     }
 
-    func createLava(planeAnchor: ARPlaneAnchor) -> SCNNode {
+    func createConcrete(planeAnchor: ARPlaneAnchor) -> SCNNode {
         
-        let lavaNode = SCNNode(geometry: SCNPlane(width: CGFloat(planeAnchor.extent.x), height: CGFloat(planeAnchor.extent.z)))
-        lavaNode.geometry?.firstMaterial?.diffuse.contents = #imageLiteral(resourceName: "concrete")
-        lavaNode.geometry?.firstMaterial?.isDoubleSided = true
-        lavaNode.position = SCNVector3(planeAnchor.center.x, planeAnchor.center.y, planeAnchor.center.z)
-        lavaNode.eulerAngles = SCNVector3(CGFloat(90.degreesToRadians), 0, 0)
+        let concreteNode = SCNNode(geometry: SCNPlane(width: CGFloat(planeAnchor.extent.x), height: CGFloat(planeAnchor.extent.z)))
+        concreteNode.geometry?.firstMaterial?.diffuse.contents = #imageLiteral(resourceName: "concrete")
+        concreteNode.geometry?.firstMaterial?.isDoubleSided = true
+        concreteNode.position = SCNVector3(planeAnchor.center.x, planeAnchor.center.y, planeAnchor.center.z)
+        concreteNode.eulerAngles = SCNVector3(CGFloat(90.degreesToRadians), 0, 0)
         
-        return lavaNode
+        let staticBody = SCNPhysicsBody.static()
+        concreteNode.physicsBody = staticBody
+        
+        return concreteNode
         
     }
     
@@ -49,14 +58,51 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let location = SCNVector3(transform.m41, transform.m42, transform.m43)
         let currentPositionOfCamera = orientation + location
         
-        let boxNode = SCNNode(geometry: SCNBox(width: 0.1, height: 0.1, length: 0.1, chamferRadius: 0))
-        boxNode.geometry?.firstMaterial?.diffuse.contents = UIColor.blue
-        boxNode.position = currentPositionOfCamera
+        let scene = SCNScene(named: "Car-Scene.scn")
+        let chassis = (scene?.rootNode.childNode(withName: "chassis", recursively: false))!
+        let rearRightWheelNode = chassis.childNode(withName: "rearRight", recursively: false)!
+        let rearLeftWheelNode = chassis.childNode(withName: "rearLeft", recursively: false)!
+        let frontRightWheelNode = chassis.childNode(withName: "frontRight", recursively: false)!
+        let frontLeftWheelNode = chassis.childNode(withName: "frontLeft", recursively: false)!
         
-        let body = SCNPhysicsBody(type: .dynamic, shape: SCNPhysicsShape(node: boxNode, options: [SCNPhysicsShape.Option.keepAsCompound: true]))
-        boxNode.physicsBody = body
-
-        self.sceneView.scene.rootNode.addChildNode(boxNode)
+        let v_rearRightWheel = SCNPhysicsVehicleWheel(node: rearRightWheelNode)
+        let v_rearLeftWheel = SCNPhysicsVehicleWheel(node: rearLeftWheelNode)
+        let v_frontRightWheel = SCNPhysicsVehicleWheel(node: frontRightWheelNode)
+        let v_frontLeftWheel = SCNPhysicsVehicleWheel(node: frontLeftWheelNode)
+        
+        chassis.position = currentPositionOfCamera
+        
+        let body = SCNPhysicsBody(type: .dynamic, shape: SCNPhysicsShape(node: chassis, options: [SCNPhysicsShape.Option.keepAsCompound: true]))
+        chassis.physicsBody = body
+        
+        self.vehicle = SCNPhysicsVehicle(chassisBody: frameNode.physicsBody!, wheels: [v_rearRightWheel, v_rearLeftWheel, v_frontRightWheel, v_frontLeftWheel])
+        self.sceneView.scene.physicsWorld.addBehavior(self.vehicle)
+        self.sceneView.scene.rootNode.addChildNode(chassis)
+        
+    }
+    
+    func setUpAccelerometer() {
+        
+        if motionManager.isAccelerometerAvailable {
+            motionManager.accelerometerUpdateInterval = 1/60
+            motionManager.startAccelerometerUpdates(to: .main, withHandler: { (accelerometerData, error) in
+                if let error = error {
+                    print(error.localizedDescription)
+                    return
+                }
+                self.accelerometerDidChange(acceleration: accelerometerData!.acceleration)
+            })
+        } else {
+            print("Accelerometer not available")
+        }
+        
+    }
+    
+    func accelerometerDidChange(acceleration: CMAcceleration) {
+        
+        print(acceleration.x)
+        print(acceleration.y)
+        print("")
         
     }
     
@@ -65,8 +111,8 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
         
         guard let planeAnchor = anchor as? ARPlaneAnchor else {return}
-        let lavaNode = createLava(planeAnchor: planeAnchor)
-        node.addChildNode(lavaNode)
+        let concreteNode = createConcrete(planeAnchor: planeAnchor)
+        node.addChildNode(concreteNode)
         
     }
     
@@ -76,8 +122,8 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         node.enumerateChildNodes { (childNode, _) in
             childNode.removeFromParentNode()
         }
-        let lavaNode = createLava(planeAnchor: planeAnchor)
-        node.addChildNode(lavaNode)
+        let concreteNode = createConcrete(planeAnchor: planeAnchor)
+        node.addChildNode(concreteNode)
         
     }
     
